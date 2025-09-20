@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Laboral Definitiva - México 2025</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Calculadora Laboral Definitiva</h1>
+            <p class="subtitle">Basada en la Ley Federal del Trabajo de México (LFT) vigente en 2025</p>
+        </header>
+        
+        <form id="calculator-form">
+            <section class="card">
+                <h2>1. Datos Fundamentales</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fechaIngreso">Fecha de Ingreso</label>
+                        <input type="date" id="fechaIngreso" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="fechaBaja">Fecha de Baja</label>
+                        <input type="date" id="fechaBaja" required>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>2. Información Salarial (Salario Variable)</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="ingresoUltimoMes">Total de Percepciones Brutas (Últimos 30 días)</label>
+                        <input type="number" id="ingresoUltimoMes" placeholder="Suma de tus percepciones" step="0.01">
+                        <small>Suma el "Total de Percepciones" de tus últimos recibos que cubran 30 días.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="sdiManual">Salario Diario Integrado (SDI) - Opcional</label>
+                        <input type="number" id="sdiManual" placeholder="Dejar en blanco para autocalcular" step="0.01">
+                        <small>Si conocés tu SDI exacto, ponelo acá. Si no, la herramienta lo calculará.</small>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="card">
+                <h2>3. Prestaciones y Condiciones</h2>
+                <div class="form-grid-three">
+                    <div class="form-group">
+                        <label for="diasAguinaldo">Días de Aguinaldo al Año</label>
+                        <input type="number" id="diasAguinaldo" value="15" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="saldoVacaciones">Días de Vacaciones Pendientes</label>
+                        <input type="number" id="saldoVacaciones" value="0" required>
+                        <small>De años anteriores, sin usar.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="esZonaFronteriza">¿Lugar de Trabajo?</label>
+                        <div class="radio-group">
+                            <input type="radio" id="zona-general" name="zona_salarial" value="general" checked>
+                            <label for="zona-general">Resto del País</label>
+                            <input type="radio" id="zona-frontera" name="zona_salarial" value="frontera">
+                            <label for="zona-frontera">Zona Fronteriza Norte</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>4. Motivo de la Baja</h2>
+                <div class="form-group">
+                    <label for="motivoBaja">Seleccioná el escenario que mejor describa tu situación:</label>
+                    <select id="motivoBaja" required>
+                        <optgroup label="Decisión del Trabajador">
+                            <option value="renuncia">Renuncia Voluntaria</option>
+                            <option value="rescisión_trabajador">Rescisión por Causa del Trabajador (Despido Indirecto - Art. 51)</option>
+                        </optgroup>
+                        <optgroup label="Decisión del Patrón (Empresa)">
+                            <option value="despido_injustificado">Despido Injustificado</option>
+                            <option value="despido_justificado">Despido Justificado (Insubordinación, Faltas, etc. - Art. 47)</option>
+                        </optgroup>
+                        <optgroup label="Otras Causas de Terminación">
+                             <option value="terminacion_colectiva">Terminación Colectiva (Cierre de Campaña/Empresa)</option>
+                            <option value="fin_contrato">Fin de Obra o Contrato por Tiempo Determinado</option>
+                            <option value="mutuo_consentimiento">Mutuo Consentimiento</option>
+                            <option value="incapacidad_trabajador">Incapacidad (No Profesional) del Trabajador</option>
+                            <option value="muerte_trabajador">Muerte del Trabajador</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </section>
+
+            <button type="submit">Calcular Liquidación / Finiquito</button>
+        </form>
+
+        <div id="results-container" class="hidden">
+            <header>
+                <h2>Desglose Detallado del Cálculo</h2>
+                <p id="res-summary-text">Cálculo para una antigüedad de X años, X meses y X días.</p>
+            </header>
+
+            <section class="card result-card">
+                <h3>A. Pagos Devengados (Finiquito)</h3>
+                <div class="result-item">
+                    <p>Aguinaldo Proporcional</p>
+                    <p class="result-amount" id="res-aguinaldo">$0.00</p>
+                </div>
+                <details>
+                    <summary>Ver Detalle</summary>
+                    <div class="detail-box" id="det-aguinaldo"></div>
+                </details>
+
+                <div class="result-item">
+                    <p>Vacaciones (Saldo + Proporcional)</p>
+                    <p class="result-amount" id="res-vacaciones">$0.00</p>
+                </div>
+                <details>
+                    <summary>Ver Detalle</summary>
+                    <div class="detail-box" id="det-vacaciones"></div>
+                </details>
+
+                <div class="result-item">
+                    <p>Prima Vacacional (25%)</p>
+                    <p class="result-amount" id="res-prima-vacacional">$0.00</p>
+                </div>
+                <details>
+                    <summary>Ver Detalle</summary>
+                    <div class="detail-box" id="det-prima-vacacional"></div>
+                </details>
+                <hr>
+                <div class="result-item subtotal">
+                    <p><strong>Subtotal Finiquito:</strong></p>
+                    <p class="result-amount" id="res-total-finiquito">$0.00</p>
+                </div>
+            </section>
+
+            <section class="card result-card">
+                <h3>B. Indemnizaciones Adicionales (Liquidación)</h3>
+                 <div class="result-item">
+                    <p>Indemnización Constitucional (3 meses)</p>
+                    <p class="result-amount" id="res-indemnizacion">$0.00</p>
+                </div>
+                <details>
+                    <summary>Ver Detalle</summary>
+                    <div class="detail-box" id="det-indemnizacion"></div>
+                </details>
+                
+                <div class="result-item">
+                    <p>Prima de Antigüedad (12 días por año)</p>
+                    <p class="result-amount" id="res-prima-antiguedad">$0.00</p>
+                </div>
+                <details>
+                    <summary>Ver Detalle</summary>
+                    <div class="detail-box" id="det-prima-antiguedad"></div>
+                </details>
+
+                <div class="result-item">
+                    <p>20 Días de Salario por Año</p>
+                    <p class="result-amount" id="res-20-dias">$0.00</p>
+                </div>
+                <details>
+                    <summary>Ver Detalle</summary>
+                    <div class="detail-box" id="det-20-dias"></div>
+                </details>
+                <hr>
+                 <div class="result-item subtotal">
+                    <p><strong>Subtotal Liquidación:</strong></p>
+                    <p class="result-amount" id="res-total-liquidacion">$0.00</p>
+                </div>
+            </section>
+            
+            <div class="total-box">
+                <h2>Pago Total Bruto Estimado</h2>
+                <p class="total-amount" id="res-total-bruto">$0.00 MXN</p>
+
+                <button type="button" id="download-json" class="download-button">Descargar Desglose (JSON)</button>
+            </div>
+             <p class="disclaimer">
+                <strong>Disclaimer:</strong> Este cálculo es una estimación con fines orientativos, basada en los datos que proporcionaste y en la LFT vigente. No constituye asesoría legal ni reemplaza la consulta con un profesional. Para la defensa y reclamación formal de tus derechos laborales, acudí a la Procuraduría Federal de la Defensa del Trabajo (PROFEDET) para recibir asesoría gratuita y personalizada.
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
