@@ -28,22 +28,23 @@
                     <div class="form-group">
                         <label for="fechaBaja">Fecha de Baja</label>
                         <input type="date" id="fechaBaja" required>
+                        <small>Por defecto, la fecha de hoy.</small>
                     </div>
                 </div>
             </section>
 
             <section class="card">
-                <h2>2. Información Salarial (Salario Variable)</h2>
+                <h2>2. Información Salarial</h2>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="ingresoUltimoMes">Total de Percepciones Brutas (Últimos 30 días)</label>
-                        <input type="number" id="ingresoUltimoMes" placeholder="Suma de tus percepciones" step="0.01">
-                        <small>Suma el "Total de Percepciones" de tus últimos recibos que cubran 30 días.</small>
+                        <label for="ingresoUltimoMes">Ingreso Bruto Total (Últimos 30 días)</label>
+                        <input type="number" id="ingresoUltimoMes" placeholder="Suma tus percepciones brutas" step="0.01">
+                        <small>Si tu salario es variable, ingresa aquí la suma bruta de los últimos 30 días trabajados (Art. 89 LFT). Si es fijo o prefieres usar el SDI, deja en blanco.</small>
                     </div>
                     <div class="form-group">
                         <label for="sdiManual">Salario Diario Integrado (SDI) - Opcional</label>
                         <input type="number" id="sdiManual" placeholder="Dejar en blanco para autocalcular" step="0.01">
-                        <small>Si conocés tu SDI exacto, ponelo acá. Si no, la herramienta lo calculará.</small>
+                        <small>Ingresa tu SDI oficial (viene en tu recibo de nómina) si lo conoces. **Tendrá prioridad** sobre el Ingreso Bruto.</small>
                     </div>
                 </div>
             </section>
@@ -53,21 +54,23 @@
                 <div class="form-grid-three">
                     <div class="form-group">
                         <label for="diasAguinaldo">Días de Aguinaldo al Año</label>
-                        <input type="number" id="diasAguinaldo" value="15" required>
+                        <input type="number" id="diasAguinaldo" value="15" min="15" required>
+                        <small>Mínimo 15 por ley.</small>
                     </div>
                     <div class="form-group">
                         <label for="saldoVacaciones">Días de Vacaciones Pendientes</label>
-                        <input type="number" id="saldoVacaciones" value="0" required>
+                        <input type="number" id="saldoVacaciones" value="0" min="0" required>
                         <small>De años anteriores, sin usar.</small>
                     </div>
                     <div class="form-group">
-                        <label for="esZonaFronteriza">¿Lugar de Trabajo?</label>
+                        <label for="esZonaFronteriza">Lugar de Trabajo</label>
                         <div class="radio-group">
                             <input type="radio" id="zona-general" name="zona_salarial" value="general" checked>
                             <label for="zona-general">Resto del País</label>
                             <input type="radio" id="zona-frontera" name="zona_salarial" value="frontera">
                             <label for="zona-frontera">Zona Fronteriza Norte</label>
                         </div>
+                        <small>Afecta el tope de la Prima de Antigüedad.</small>
                     </div>
                 </div>
             </section>
@@ -75,21 +78,22 @@
             <section class="card">
                 <h2>4. Motivo de la Baja</h2>
                 <div class="form-group">
-                    <label for="motivoBaja">Seleccioná el escenario que mejor describa tu situación:</label>
+                    <label for="motivoBaja">Selecciona el escenario que mejor describa tu situación:</label>
                     <select id="motivoBaja" required>
+                        <option value="" disabled selected>-- Elige una opción --</option>
                         <optgroup label="Decisión del Trabajador">
                             <option value="renuncia">Renuncia Voluntaria</option>
-                            <option value="rescisión_trabajador">Rescisión por Causa del Trabajador (Despido Indirecto - Art. 51)</option>
+                            <option value="rescisión_trabajador">Rescisión por Causa del Patrón (Despido Indirecto - Art. 51)</option>
                         </optgroup>
                         <optgroup label="Decisión del Patrón (Empresa)">
                             <option value="despido_injustificado">Despido Injustificado</option>
                             <option value="despido_justificado">Despido Justificado (Insubordinación, Faltas, etc. - Art. 47)</option>
                         </optgroup>
                         <optgroup label="Otras Causas de Terminación">
-                             <option value="terminacion_colectiva">Terminación Colectiva (Cierre de Campaña/Empresa)</option>
+                             <option value="terminacion_colectiva">Terminación Colectiva (Cierre de Campaña/Empresa - Art. 434)</option>
                             <option value="fin_contrato">Fin de Obra o Contrato por Tiempo Determinado</option>
                             <option value="mutuo_consentimiento">Mutuo Consentimiento</option>
-                            <option value="incapacidad_trabajador">Incapacidad (No Profesional) del Trabajador</option>
+                            <option value="incapacidad_trabajador">Incapacidad (No Profesional) del Trabajador (Art. 53-IV)</option>
                             <option value="muerte_trabajador">Muerte del Trabajador</option>
                         </optgroup>
                     </select>
@@ -135,7 +139,7 @@
                 </details>
                 <hr>
                 <div class="result-item subtotal">
-                    <p><strong>Subtotal Finiquito:</strong></p>
+                    <p><strong>Subtotal Finiquito (Bruto):</strong></p>
                     <p class="result-amount" id="res-total-finiquito">$0.00</p>
                 </div>
             </section>
@@ -143,7 +147,7 @@
             <section class="card result-card">
                 <h3>B. Indemnizaciones Adicionales (Liquidación)</h3>
                  <div class="result-item">
-                    <p>Indemnización Constitucional (3 meses)</p>
+                    <p>Indemnización Constitucional (3 meses / 1 mes)</p>
                     <p class="result-amount" id="res-indemnizacion">$0.00</p>
                 </div>
                 <details>
@@ -170,7 +174,7 @@
                 </details>
                 <hr>
                  <div class="result-item subtotal">
-                    <p><strong>Subtotal Liquidación:</strong></p>
+                    <p><strong>Subtotal Liquidación (Bruto):</strong></p>
                     <p class="result-amount" id="res-total-liquidacion">$0.00</p>
                 </div>
             </section>
@@ -178,15 +182,25 @@
             <div class="total-box">
                 <h2>Pago Total Bruto Estimado</h2>
                 <p class="total-amount" id="res-total-bruto">$0.00 MXN</p>
-
-                <button type="button" id="download-json" class="download-button">Descargar Desglose (JSON)</button>
+                <button type="button" id="download-json" class="download-button" style="display: none;">Descargar Desglose (JSON)</button>
+                <button type="button" id="download-pdf" class="download-button pdf-button" style="display: none;">Descargar Reporte (PDF)</button>
             </div>
-             <p class="disclaimer">
-                <strong>Disclaimer:</strong> Este cálculo es una estimación con fines orientativos, basada en los datos que proporcionaste y en la LFT vigente. No constituye asesoría legal ni reemplaza la consulta con un profesional. Para la defensa y reclamación formal de tus derechos laborales, acudí a la Procuraduría Federal de la Defensa del Trabajo (PROFEDET) para recibir asesoría gratuita y personalizada.
-            </p>
-        </div>
-    </div>
 
+            <section id="isr-details-container" class="card result-card hidden">
+                 <h3>C. Cálculo Estimado del ISR a Retener</h3>
+                 <div id="isr-details-content">
+                     </div>
+                 <hr>
+                 <div class="result-item subtotal">
+                     <p><strong>Pago Neto Estimado (En mano):</strong></p>
+                     <p class="result-amount" id="res-total-neto">$0.00</p>
+                 </div>
+            </section>
+            
+            <p class="disclaimer">
+                <strong>Disclaimer:</strong> Este cálculo es una estimación con fines orientativos, basada en los datos proporcionados y en la legislación vigente a la fecha de consulta (2025). Este resultado no constituye asesoría legal ni reemplaza la consulta con un profesional. Para la defensa y reclamación formal de sus derechos laborales, acuda a la Procuraduría Federal de la Defensa del Trabajo (PROFEDET) para recibir asesoría gratuita y personalizada.
+            </p>
+        </div> </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
