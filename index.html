@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +19,7 @@
         
         <form id="calculator-form">
             <section class="card">
-                <h2>1. Datos Fundamentales</h2>
+                <h2>1. Fechas Clave</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="fechaIngreso">Fecha de Ingreso</label>
@@ -45,6 +45,27 @@
                         <label for="sdiManual">Salario Diario Integrado (SDI) - Opcional</label>
                         <input type="number" id="sdiManual" placeholder="Dejar en blanco para autocalcular" step="0.01">
                         <small>Ingresa tu SDI oficial (viene en tu recibo de nómina) si lo conoces. **Tendrá prioridad** sobre el Ingreso Bruto.</small>
+                    </div>
+                </div>
+                <hr class="section-divider">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="fechaUltimoPago">Fecha de Corte del Último Pago</label>
+                        <input type="date" id="fechaUltimoPago" required>
+                        <small>Ingresa el último día que cubrió tu pago anterior (Ej: si te pagan la catorcena 1-14, pon el día 14).</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Días Laborales Habituales</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="dia-1" name="diasTrabajo" value="1" checked><label for="dia-1">L</label>
+                            <input type="checkbox" id="dia-2" name="diasTrabajo" value="2" checked><label for="dia-2">M</label>
+                            <input type="checkbox" id="dia-3" name="diasTrabajo" value="3" checked><label for="dia-3">M</label>
+                            <input type="checkbox" id="dia-4" name="diasTrabajo" value="4" checked><label for="dia-4">J</label>
+                            <input type="checkbox" id="dia-5" name="diasTrabajo" value="5" checked><label for="dia-5">V</label>
+                            <input type="checkbox" id="dia-6" name="diasTrabajo" value="6"><label for="dia-6">S</label>
+                            <input type="checkbox" id="dia-0" name="diasTrabajo" value="0"><label for="dia-0">D</label>
+                        </div>
+                        <small>Selecciona los días que trabajas normalmente.</small>
                     </div>
                 </div>
             </section>
@@ -77,7 +98,7 @@
 
             <section class="card">
                 <h2>4. Motivo de la Baja</h2>
-                <div class="form-group">
+                 <div class="form-group">
                     <label for="motivoBaja">Selecciona el escenario que mejor describa tu situación:</label>
                     <select id="motivoBaja" required>
                         <option value="" disabled selected>-- Elige una opción --</option>
@@ -101,6 +122,10 @@
             </section>
 
             <button type="submit">Calcular Liquidación / Finiquito</button>
+        
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="investigacion.html" target="_blank">Ver la investigación y el fundamento legal de esta herramienta</a>
+            </div>
         </form>
 
         <div id="results-container" class="hidden">
@@ -111,6 +136,14 @@
 
             <section class="card result-card">
                 <h3>A. Pagos Devengados (Finiquito)</h3>
+                <div class="result-item">
+                    <p>Salarios Devengados (<span id="dias-devengados">X</span> días)</p> <p class="result-amount" id="res-salarios-devengados">$0.00</p>
+                </div>
+                <details>
+                    <summary>Ver Detalle</summary>
+                    <div class="detail-box" id="det-salarios-devengados"></div>
+                </details>
+                
                 <div class="result-item">
                     <p>Aguinaldo Proporcional</p>
                     <p class="result-amount" id="res-aguinaldo">$0.00</p>
@@ -179,27 +212,42 @@
                 </div>
             </section>
             
-            <div class="total-box">
-                <h2>Pago Total Bruto Estimado</h2>
-                <p class="total-amount" id="res-total-bruto">$0.00 MXN</p>
-                <button type="button" id="download-json" class="download-button" style="display: none;">Descargar Desglose (JSON)</button>
-                <button type="button" id="download-pdf" class="download-button pdf-button" style="display: none;">Descargar Reporte (PDF)</button>
-            </div>
-
             <section id="isr-details-container" class="card result-card hidden">
                  <h3>C. Cálculo Estimado del ISR a Retener</h3>
                  <div id="isr-details-content">
                      </div>
                  <hr>
                  <div class="result-item subtotal">
-                     <p><strong>Pago Neto Estimado (En mano):</strong></p>
-                     <p class="result-amount" id="res-total-neto">$0.00</p>
+                     <p><strong>ISR Total Estimado:</strong></p>
+                     <p class="result-amount" id="res-isr-total">$0.00</p>
                  </div>
             </section>
+
+            <div class="total-box">
+                <h2>Resumen Final Estimado</h2>
+                <div class="total-summary">
+                    <p>Pago Total Bruto:</p>
+                    <p class="total-amount bruto" id="res-total-bruto">$0.00 MXN</p>
+                </div>
+                 <div class="total-summary">
+                    <p>ISR Retenido Estimado:</p>
+                    <p class="total-amount isr" id="res-isr-retenido-final">$0.00 MXN</p>
+                </div>
+                 <div class="total-summary net">
+                    <p>Pago Neto Estimado (En mano):</p>
+                    <p class="total-amount neto" id="res-total-neto">$0.00 MXN</p>
+                </div>
+
+                <div class="download-buttons-container">
+                    <button type="button" id="download-json-simple" class="download-button" style="display: none;">JSON (Simple)</button>
+                    <button type="button" id="download-json-detailed" class="download-button" style="display: none;">JSON (Detallado)</button>
+                    <button type="button" id="download-pdf-simple" class="download-button pdf-button" style="display: none;">PDF (Simple)</button>
+                    <button type="button" id="download-pdf-detailed" class="download-button pdf-button" style="display: none;">PDF (Detallado)</button>
+                 </div>
+            </div>
             
             <p class="disclaimer">
-                <strong>Disclaimer:</strong> Este cálculo es una estimación con fines orientativos, basada en los datos proporcionados y en la legislación vigente a la fecha de consulta (2025). Este resultado no constituye asesoría legal ni reemplaza la consulta con un profesional. Para la defensa y reclamación formal de sus derechos laborales, acuda a la Procuraduría Federal de la Defensa del Trabajo (PROFEDET) para recibir asesoría gratuita y personalizada.
-            </p>
+                </p>
         </div> </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
