@@ -1,254 +1,1270 @@
 <!DOCTYPE html>
-<html lang="es-MX">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora Laboral Definitiva - México 2025</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Calculadora Laboral Definitiva MX 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+            line-height: 1.25;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .no-print {
+            display: block;
+        }
+        .print-only {
+            display: none;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .printable-section, .printable-section * {
+                visibility: visible;
+            }
+            .printable-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none;
+            }
+            .print-only {
+                display: block;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 flex flex-col justify-start items-center min-h-screen p-4 md:p-10">
 
-    <div class="container">
-        <header>
-            <h1>Calculadora Laboral Definitiva</h1>
-            <p class="subtitle">Basada en la Ley Federal del Trabajo de México (LFT) vigente en 2025</p>
-        </header>
+    <div class="container w-full bg-white p-6 md:p-10 rounded-2xl shadow-xl">
         
-        <form id="calculator-form">
-            <section class="card">
-                <h2>1. Fechas Clave</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="fechaIngreso">Fecha de Ingreso</label>
-                        <input type="date" id="fechaIngreso" required>
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Calculadora Laboral Definitiva MX</h1>
+            <p class="text-lg text-gray-600 mt-2">Estimación de Finiquito y Liquidación (Leyes 2025)</p>
+        </header>
+
+        <!-- Formulario de Entradas -->
+        <form id="calculator-form" class="space-y-8">
+
+            <!-- Sección 1: Fechas Clave -->
+            <section class="border border-gray-200 p-6 rounded-xl shadow-sm bg-gray-50/50">
+                <h2 class="text-xl font-semibold mb-6 text-gray-800 border-b border-gray-300 pb-3">1. Fechas Clave</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="fechaIngreso" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Ingreso</label>
+                        <input type="date" id="fechaIngreso" name="fechaIngreso" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" required>
                     </div>
-                    <div class="form-group">
-                        <label for="fechaBaja">Fecha de Baja</label>
-                        <input type="date" id="fechaBaja" required>
-                        <small>Por defecto, la fecha de hoy.</small>
+                    <div>
+                        <label for="fechaBaja" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Baja (Último día)</label>
+                        <input type="date" id="fechaBaja" name="fechaBaja" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" required>
+                    </div>
+                    <div>
+                        <label for="fechaUltimoPago" class="block text-sm font-medium text-gray-700 mb-2">Fecha Final del Último Pago</label>
+                        <input type="date" id="fechaUltimoPago" name="fechaUltimoPago" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" required>
+                        <div class="tooltip inline-block ml-1">
+                            <span class="text-blue-600 text-xs font-semibold cursor-pointer">(?)</span>
+                            <span class="tooltiptext">¿Cuándo terminó el último periodo que te pagaron? (Ej: Si te pagan quincenal, pon el día 15 o 30/31).</span>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section class="card">
-                <h2>2. Información Salarial</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="ingresoUltimoMes">Ingreso Bruto Total (Últimos 30 días)</label>
-                        <input type="number" id="ingresoUltimoMes" placeholder="Suma tus percepciones brutas" step="0.01">
-                        <small>Si tu salario es variable, ingresa aquí la suma bruta de los últimos 30 días trabajados (Art. 89 LFT). Si es fijo o prefieres usar el SDI, deja en blanco.</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="sdiManual">Salario Diario Integrado (SDI) - Opcional</label>
-                        <input type="number" id="sdiManual" placeholder="Dejar en blanco para autocalcular" step="0.01">
-                        <small>Ingresa tu SDI oficial (viene en tu recibo de nómina) si lo conoces. **Tendrá prioridad** sobre el Ingreso Bruto.</small>
+            <!-- Sección 2: Información Salarial -->
+            <section class="border border-gray-200 p-6 rounded-xl shadow-sm bg-gray-50/50">
+                <h2 class="text-xl font-semibold mb-6 text-gray-800 border-b border-gray-300 pb-3">2. Información Salarial</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="periodoPago" class="block text-sm font-medium text-gray-700 mb-2">Tu Periodo de Pago es</label>
+                        <select id="periodoPago" name="periodoPago" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="catorcenal">Catorcenal (14 días)</option>
+                            <option value="semanal">Semanal (7 días)</option>
+                            <option value="quincenal">Quincenal (15 días)</option>
+                            <option value="mensual">Mensual (30.4 días)</option>
+                            <option value="diario">Diario (1 día)</option>
+                        </select>
                     </div>
                 </div>
-                <hr class="section-divider">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="fechaUltimoPago">Fecha de Corte del Último Pago</label>
-                        <input type="date" id="fechaUltimoPago" required>
-                        <small>Ingresa el último día que cubrió tu pago anterior (Ej: si te pagan la catorcena 1-14, pon el día 14).</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Días Laborales Habituales</label>
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="dia-1" name="diasTrabajo" value="1" checked><label for="dia-1">L</label>
-                            <input type="checkbox" id="dia-2" name="diasTrabajo" value="2" checked><label for="dia-2">M</label>
-                            <input type="checkbox" id="dia-3" name="diasTrabajo" value="3" checked><label for="dia-3">M</label>
-                            <input type="checkbox" id="dia-4" name="diasTrabajo" value="4" checked><label for="dia-4">J</label>
-                            <input type="checkbox" id="dia-5" name="diasTrabajo" value="5" checked><label for="dia-5">V</label>
-                            <input type="checkbox" id="dia-6" name="diasTrabajo" value="6"><label for="dia-6">S</label>
-                            <input type="checkbox" id="dia-0" name="diasTrabajo" value="0"><label for="dia-0">D</label>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="salarioBaseBruto" class="block text-sm font-medium text-gray-700 mb-2">Sueldo Ordinario Bruto (de tu recibo)</label>
+                        <input type="number" step="0.01" id="salarioBaseBruto" name="salarioBaseBruto" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ej: 7074.87" required>
+                        <div class="tooltip inline-block ml-1">
+                            <span class="text-blue-600 text-xs font-semibold cursor-pointer">(?)</span>
+                            <span class="tooltiptext">Ingresa el monto de tu "Sueldo Ordinario" o "Salario" de tu recibo, ANTES de impuestos. La calculadora lo dividirá entre los días de tu periodo.</span>
                         </div>
-                        <small>Selecciona los días que trabajas normalmente.</small>
+                    </div>
+                    <div>
+                        <label for="netoPagado" class="block text-sm font-medium text-gray-700 mb-2">Neto Pagado (de tu recibo)</label>
+                        <input type="number" step="0.01" id="netoPagado" name="netoPagado" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ej: 8150.15" required>
+                        <div class="tooltip inline-block ml-1">
+                            <span class="text-blue-600 text-xs font-semibold cursor-pointer">(?)</span>
+                            <span class="tooltiptext">Ingresa el "Total Pagado" o "Neto a Pagar" de tu último recibo. La calculadora estimará tu USMO Neto mensual automáticamente.</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="salarioVariablePromedio" class="block text-sm font-medium text-gray-700 mb-2">Promedio Diario Salario Variable (Opcional)</label>
+                        <input type="number" step="0.01" id="salarioVariablePromedio" name="salarioVariablePromedio" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="0.00">
+                        <div class="tooltip inline-block ml-1">
+                            <span class="text-blue-600 text-xs font-semibold cursor-pointer">(?)</span>
+                            <span class="tooltiptext">Solo para salarios 100% variables (comisiones). Si tienes sueldo mixto, usa el campo SDI Manual.</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="sdiManual" class="block text-sm font-medium text-gray-700 mb-2">Salario Diario Integrado (SDI) - Manual (Opcional)</label>
+                        <input type="number" step="0.01" id="sdiManual" name="sdiManual" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ej: 603.01">
+                        <div class="tooltip inline-block ml-1">
+                            <span class="text-blue-600 text-xs font-semibold cursor-pointer">(?)</span>
+                            <span class="tooltiptext">Ingresa tu SDI de tu recibo (si es diferente al calculado). Si lo dejas en 0, la calculadora lo estimará con el mínimo de ley.</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección 3: Prestaciones de Ley -->
+            <section class="border border-gray-200 p-6 rounded-xl shadow-sm bg-gray-50/50">
+                <h2 class="text-xl font-semibold mb-6 text-gray-800 border-b border-gray-300 pb-3">3. Prestaciones</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="diasAguinaldo" class="block text-sm font-medium text-gray-700 mb-2">Días de Aguinaldo por Año</label>
+                        <input type="number" id="diasAguinaldo" name="diasAguinaldo" value="15" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" required>
+                    </div>
+                    <div>
+                        <label for="saldoVacaciones" class="block text-sm font-medium text-gray-700 mb-2">Días de Vacaciones Pendientes</label>
+                        <input type="number" id="saldoVacaciones" name="saldoVacaciones" value="0" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" required>
+                        <div class="tooltip inline-block ml-1">
+                            <span class="text-blue-600 text-xs font-semibold cursor-pointer">(?)</span>
+                            <span class="tooltiptext">Días que ya te habías ganado de años anteriores y no has tomado. Los días proporcionales de este año se calculan solos.</span>
+                        </div>
                     </div>
                 </div>
             </section>
             
-            <section class="card">
-                <h2>3. Prestaciones y Condiciones</h2>
-                <div class="form-grid-three">
-                    <div class="form-group">
-                        <label for="diasAguinaldo">Días de Aguinaldo al Año</label>
-                        <input type="number" id="diasAguinaldo" value="15" min="15" required>
-                        <small>Mínimo 15 por ley.</small>
+            <!-- Sección 4: Deducciones Adicionales -->
+            <section class="border border-gray-200 p-6 rounded-xl shadow-sm bg-gray-50/50">
+                <h2 class="text-xl font-semibold mb-6 text-gray-800 border-b border-gray-300 pb-3">4. Deducciones Adicionales (Opcional)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="deduccionInfonavit" class="block text-sm font-medium text-gray-700 mb-2">Crédito INFONAVIT</label>
+                        <input type="number" step="0.01" id="deduccionInfonavit" name="deduccionInfonavit" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="0.00">
                     </div>
-                    <div class="form-group">
-                        <label for="saldoVacaciones">Días de Vacaciones Pendientes</label>
-                        <input type="number" id="saldoVacaciones" value="0" min="0" required>
-                        <small>De años anteriores, sin usar.</small>
+                    <div>
+                        <label for="deduccionPension" class="block text-sm font-medium text-gray-700 mb-2">Pensión Alimenticia</label>
+                        <input type="number" step="0.01" id="deduccionPension" name="deduccionPension" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="0.00">
                     </div>
-                    <div class="form-group">
-                        <label for="esZonaFronteriza">Lugar de Trabajo</label>
-                        <div class="radio-group">
-                            <input type="radio" id="zona-general" name="zona_salarial" value="general" checked>
-                            <label for="zona-general">Resto del País</label>
-                            <input type="radio" id="zona-frontera" name="zona_salarial" value="frontera">
-                            <label for="zona-frontera">Zona Fronteriza Norte</label>
-                        </div>
-                        <small>Afecta el tope de la Prima de Antigüedad.</small>
+                    <div>
+                        <label for="deduccionFonacot" class="block text-sm font-medium text-gray-700 mb-2">Crédito FONACOT</label>
+                        <input type="number" step="0.01" id="deduccionFonacot" name="deduccionFonacot" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="0.00">
                     </div>
                 </div>
             </section>
 
-            <section class="card">
-                <h2>4. Motivo de la Baja</h2>
-                 <div class="form-group">
-                    <label for="motivoBaja">Selecciona el escenario que mejor describa tu situación:</label>
-                    <select id="motivoBaja" required>
-                        <option value="" disabled selected>-- Elige una opción --</option>
-                        <optgroup label="Decisión del Trabajador">
+            <!-- Sección 5: Motivo de la Baja -->
+            <section class="border border-gray-200 p-6 rounded-xl shadow-sm bg-gray-50/50">
+                <h2 class="text-xl font-semibold mb-6 text-gray-800 border-b border-gray-300 pb-3">5. Motivo de la Baja</h2>
+                <div>
+                    <label for="motivoBaja" class="block text-sm font-medium text-gray-700 mb-2">Selecciona el motivo de tu salida</label>
+                    <select id="motivoBaja" name="motivoBaja" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" required>
+                        <option value="">-- Selecciona una opción --</option>
+                        <optgroup label="Voluntaria">
                             <option value="renuncia">Renuncia Voluntaria</option>
-                            <option value="rescisión_trabajador">Rescisión por Causa del Patrón (Despido Indirecto - Art. 51)</option>
                         </optgroup>
-                        <optgroup label="Decisión del Patrón (Empresa)">
-                            <option value="despido_injustificado">Despido Injustificado</option>
-                            <option value="despido_justificado">Despido Justificado (Insubordinación, Faltas, etc. - Art. 47)</option>
-                        </optgroup>
-                        <optgroup label="Otras Causas de Terminación">
-                             <option value="terminacion_colectiva">Terminación Colectiva (Cierre de Campaña/Empresa - Art. 434)</option>
-                            <option value="fin_contrato">Fin de Obra o Contrato por Tiempo Determinado</option>
-                            <option value="mutuo_consentimiento">Mutuo Consentimiento</option>
-                            <option value="incapacidad_trabajador">Incapacidad (No Profesional) del Trabajador (Art. 53-IV)</option>
-                            <option value="muerte_trabajador">Muerte del Trabajador</option>
+                        <optgroup label="Despido (Involuntaria)">
+                            <option value="despido_injustificado">Despido Injustificado (Art. 47 LFT)</option>
+                            <option value="termino_contrato">Término de Contrato Obra/Tiempo Determinado</option>
+                            <option value="terminacion_colectiva">Terminación Colectiva (Fuerza Mayor, Cierre - Art. 434 LFT)</option>
+                            <option value="despido_justificado">Despido Justificado (Falta Grave del Trabajador - Art. 47 LFT)</option>
                         </optgroup>
                     </select>
                 </div>
+                
+                <div class="mt-6 space-y-4">
+                    <div class="flex items-center">
+                        <input id="esZonaFronteriza" name="esZonaFronteriza" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="esZonaFronteriza" class="ml-3 block text-sm font-medium text-gray-700">Aplico para Zona Libre de la Frontera Norte (Salario Mínimo Doble)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="aplica20Dias" name="aplica20Dias" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="aplica20Dias" class="ml-3 block text-sm font-medium text-gray-700">El patrón se niega a reinstalarme (Aplica 20 días por año)</label>
+                        <div class="tooltip inline-block ml-1">
+                            <span class="text-blue-600 text-xs font-semibold cursor-pointer">(?)</span>
+                            <span class="tooltiptext">Solo aplica en despidos injustificados donde un laudo te da la razón y el patrón prefiere pagarte en lugar de reinstalarte.</span>
+                        </div>
+                    </div>
+                </div>
             </section>
 
-            <button type="submit">Calcular Liquidación / Finiquito</button>
-        
-            <div style="text-align: center; margin-top: 15px;">
-                <a href="investigacion.html" target="_blank">Ver la investigación y el fundamento legal de esta herramienta</a>
+            <!-- Botón de Cálculo -->
+            <div class="text-center mt-10 no-print">
+                <button type="submit" id="calculate-btn" class="bg-blue-600 text-white font-bold text-lg px-12 py-4 rounded-lg shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    Calcular Estimación
+                </button>
             </div>
         </form>
 
-        <div id="results-container" class="hidden">
-            <header>
-                <h2>Desglose Detallado del Cálculo</h2>
-                <p id="res-summary-text">Cálculo para una antigüedad de X años, X meses y X días.</p>
-            </header>
-
-            <section class="card result-card">
-                <h3>A. Pagos Devengados (Finiquito)</h3>
-                <div class="result-item">
-                    <p>Salarios Devengados (<span id="dias-devengados">X</span> días)</p> <p class="result-amount" id="res-salarios-devengados">$0.00</p>
-                </div>
-                <details>
-                    <summary>Ver Detalle</summary>
-                    <div class="detail-box" id="det-salarios-devengados"></div>
-                </details>
-                
-                <div class="result-item">
-                    <p>Aguinaldo Proporcional</p>
-                    <p class="result-amount" id="res-aguinaldo">$0.00</p>
-                </div>
-                <details>
-                    <summary>Ver Detalle</summary>
-                    <div class="detail-box" id="det-aguinaldo"></div>
-                </details>
-
-                <div class="result-item">
-                    <p>Vacaciones (Saldo + Proporcional)</p>
-                    <p class="result-amount" id="res-vacaciones">$0.00</p>
-                </div>
-                <details>
-                    <summary>Ver Detalle</summary>
-                    <div class="detail-box" id="det-vacaciones"></div>
-                </details>
-
-                <div class="result-item">
-                    <p>Prima Vacacional (25%)</p>
-                    <p class="result-amount" id="res-prima-vacacional">$0.00</p>
-                </div>
-                <details>
-                    <summary>Ver Detalle</summary>
-                    <div class="detail-box" id="det-prima-vacacional"></div>
-                </details>
-                <hr>
-                <div class="result-item subtotal">
-                    <p><strong>Subtotal Finiquito (Bruto):</strong></p>
-                    <p class="result-amount" id="res-total-finiquito">$0.00</p>
-                </div>
-            </section>
-
-            <section class="card result-card">
-                <h3>B. Indemnizaciones Adicionales (Liquidación)</h3>
-                 <div class="result-item">
-                    <p>Indemnización Constitucional (3 meses / 1 mes)</p>
-                    <p class="result-amount" id="res-indemnizacion">$0.00</p>
-                </div>
-                <details>
-                    <summary>Ver Detalle</summary>
-                    <div class="detail-box" id="det-indemnizacion"></div>
-                </details>
-                
-                <div class="result-item">
-                    <p>Prima de Antigüedad (12 días por año)</p>
-                    <p class="result-amount" id="res-prima-antiguedad">$0.00</p>
-                </div>
-                <details>
-                    <summary>Ver Detalle</summary>
-                    <div class="detail-box" id="det-prima-antiguedad"></div>
-                </details>
-
-                <div class="result-item">
-                    <p>20 Días de Salario por Año</p>
-                    <p class="result-amount" id="res-20-dias">$0.00</p>
-                </div>
-                <details>
-                    <summary>Ver Detalle</summary>
-                    <div class="detail-box" id="det-20-dias"></div>
-                </details>
-                <hr>
-                 <div class="result-item subtotal">
-                    <p><strong>Subtotal Liquidación (Bruto):</strong></p>
-                    <p class="result-amount" id="res-total-liquidacion">$0.00</p>
-                </div>
-            </section>
+        <!-- Sección de Resultados -->
+        <div id="results" class="mt-12 hidden">
             
-            <section id="isr-details-container" class="card result-card hidden">
-                 <h3>C. Cálculo Estimado del ISR a Retener</h3>
-                 <div id="isr-details-content">
-                     </div>
-                 <hr>
-                 <div class="result-item subtotal">
-                     <p><strong>ISR Total Estimado:</strong></p>
-                     <p class="result-amount" id="res-isr-total">$0.00</p>
-                 </div>
-            </section>
-
-            <div class="total-box">
-                <h2>Resumen Final Estimado</h2>
-                <div class="total-summary">
-                    <p>Pago Total Bruto:</p>
-                    <p class="total-amount bruto" id="res-total-bruto">$0.00 MXN</p>
-                </div>
-                 <div class="total-summary">
-                    <p>ISR Retenido Estimado:</p>
-                    <p class="total-amount isr" id="res-isr-retenido-final">$0.00 MXN</p>
-                </div>
-                 <div class="total-summary net">
-                    <p>Pago Neto Estimado (En mano):</p>
-                    <p class="total-amount neto" id="res-total-neto">$0.00 MXN</p>
-                </div>
-
-                <div class="download-buttons-container">
-                    <button type="button" id="download-json-simple" class="download-button" style="display: none;">JSON (Simple)</button>
-                    <button type="button" id="download-json-detailed" class="download-button" style="display: none;">JSON (Detallado)</button>
-                    <button type="button" id="download-pdf-simple" class="download-button pdf-button" style="display: none;">PDF (Simple)</button>
-                    <button type="button" id="download-pdf-detailed" class="download-button pdf-button" style="display: none;">PDF (Detallado)</button>
-                 </div>
+            <div id="error-message" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-6 rounded-lg mb-8 shadow-md" role="alert">
+                <h3 class="font-bold text-lg mb-2">Ocurrió un error</h3>
+                <p id="error-text"></p>
             </div>
+
+            <!-- Resumen de Totales -->
+            <section id="summary" class="bg-blue-50 border-2 border-blue-200 p-6 md:p-8 rounded-2xl shadow-lg mb-10 printable-section">
+                
+                <div class="print-only mb-6">
+                    <h1 class="text-3xl font-bold text-gray-900">Reporte de Cálculo Laboral</h1>
+                    <p class="text-lg text-gray-600" id="print-date"></p>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-gray-900 text-center mb-6">Resumen de Pago Estimado</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Bruto</h3>
+                        <p id="total-bruto" class="text-3xl font-bold text-gray-900 mt-2">$0.00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Deducciones (ISR/IMSS)</h3>
+                        <p id="total-deducciones" class="text-3xl font-bold text-red-600 mt-2">-$0.00</p>
+                    </div>
+                    <div class="bg-blue-600 text-white p-6 rounded-xl shadow-lg">
+                        <h3 class="text-sm font-medium text-blue-100 uppercase tracking-wide">Total Neto Estimado</h3>
+                        <p id="total-neto" class="text-3xl font-bold mt-2">$0.00</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Botones de Acción -->
+            <div class="flex flex-col md:flex-row justify-center gap-4 mb-10 no-print">
+                <button id="download-pdf" class="bg-gray-800 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-gray-900 transition focus:outline-none focus:ring-4 focus:ring-gray-300">
+                    Descargar PDF Detallado
+                </button>
+                <button id="download-json" class="bg-gray-200 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-gray-300 transition focus:outline-none focus:ring-4 focus:ring-gray-200">
+                    Descargar Datos (JSON)
+                </button>
+            </div>
+
+            <!-- Reporte Detallado -->
+            <section id="detailed-report" class="space-y-8 printable-section">
+                
+                <!-- Finiquito -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border">
+                    <h3 class="text-xl font-bold text-blue-700 mb-5 border-b pb-3">Finiquito (Partes Proporcionales y Adeudos)</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div id="fin-salarios" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Salarios Devengados</h4>
+                            <p id="fin-salarios-monto" class="text-2xl font-bold text-gray-900">$0.00</p>
+                            <p id="fin-salarios-detalle" class="text-xs text-gray-600">0 días</p>
+                        </div>
+                        <div id="fin-aguinaldo" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Aguinaldo</h4>
+                            <p id="fin-aguinaldo-monto" class="text-2xl font-bold text-gray-900">$0.00</p>
+                            <p id="fin-aguinaldo-detalle" class="text-xs text-gray-600">0 días</p>
+                        </div>
+                        <div id="fin-vacaciones" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Vacaciones</h4>
+                            <p id="fin-vacaciones-monto" class="text-2xl font-bold text-gray-900">$0.00</p>
+                            <p id="fin-vacaciones-detalle" class="text-xs text-gray-600">0 días</p>
+                        </div>
+                        <div id="fin-prima" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Prima Vacacional (25%)</h4>
+                            <p id="fin-prima-monto" class="text-2xl font-bold text-gray-900">$0.00</p>
+                            <p id="fin-prima-detalle" class="text-xs text-gray-600">sobre vacaciones</p>
+                        </div>
+                    </div>
+                    <div class="text-right mt-4">
+                        <span class="text-lg font-bold text-gray-800">Subtotal Finiquito (Bruto): </span>
+                        <span id="subtotal-finiquito" class="text-xl font-bold text-blue-700">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Liquidación -->
+                <div id="liquidacion-section" class="bg-white p-6 rounded-xl shadow-lg border">
+                    <h3 class="text-xl font-bold text-blue-700 mb-5 border-b pb-3">Liquidación (Indemnización por Despido)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div id="liq-indemnizacion" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Indemnización Constitucional</h4>
+                            <p id="liq-indemnizacion-monto" class="text-2xl font-bold text-gray-900">$0.00</p>
+                            <p id="liq-indemnizacion-detalle" class="text-xs text-gray-600">3 meses de SDI</p>
+                        </div>
+                        <div id="liq-prima" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Prima de Antigüedad</h4>
+                            <p id="liq-prima-monto" class="text-2xl font-bold text-gray-900">$0.00</p>
+                            <p id="liq-prima-detalle" class="text-xs text-gray-600">12 días/año (topado)</p>
+                        </div>
+                        <div id="liq-20dias" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">20 Días por Año</h4>
+                            <p id="liq-20dias-monto" class="text-2xl font-bold text-gray-900">$0.00</p>
+                            <p id="liq-20dias-detalle" class="text-xs text-gray-600">N/A</p>
+                        </div>
+                    </div>
+                    <div class="text-right mt-4">
+                        <span class="text-lg font-bold text-gray-800">Subtotal Liquidación (Bruta): </span>
+                        <span id="subtotal-liquidacion" class="text-xl font-bold text-blue-700">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Deducciones -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border">
+                    <h3 class="text-xl font-bold text-red-700 mb-5 border-b pb-3">Deducciones Estimadas</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">ISR (Finiquito)</h4>
+                            <p id="ded-isr-finiquito" class="text-2xl font-bold text-red-600">-$0.00</p>
+                            <p id="ded-isr-finiquito-detalle" class="text-xs text-gray-600">Art. 93/94 LISR</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">ISR (Liquidación)</h4>
+                            <p id="ded-isr-liquidacion" class="text-2xl font-bold text-red-600">-$0.00</p>
+                            <p id="ded-isr-liquidacion-detalle" class="text-xs text-gray-600">Art. 96 LISR</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">IMSS</h4>
+                            <p id="ded-imss" class="text-2xl font-bold text-red-600">-$0.00</p>
+                            <p id="ded-imss-detalle" class="text-xs text-gray-600">Sobre salarios devengados</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">Otras Deducciones</h4>
+                            <p id="ded-otras" class="text-2xl font-bold text-red-600">-$0.00</p>
+                            <p id="ded-otras-detalle" class="text-xs text-gray-600">Infonavit, Pensión, etc.</p>
+                        </div>
+                    </div>
+                    <div class="text-right mt-4">
+                        <span class="text-lg font-bold text-gray-800">Total Deducciones: </span>
+                        <span id="subtotal-deducciones" class="text-xl font-bold text-red-700">-$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Detalles del Cálculo (Memoria) -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border">
+                    <h3 class="text-xl font-bold text-gray-800 mb-5 border-b pb-3">Memoria de Cálculo</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Datos de Antigüedad</h4>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li id="mem-antiguedad-dias"><strong>Días Totales:</strong> 0</li>
+                                <li id="mem-antiguedad-anios"><strong>Años Completos:</strong> 0</li>
+                                <li id="mem-antiguedad-decimal"><strong>Años (Decimal):</strong> 0.00</li>
+                                <li id="mem-dias-ejercicio"><strong>Días del Año (Finiquito):</strong> 0</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Datos Salariales</h4>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li id="mem-sd"><strong>Salario Diario (SD):</strong> $0.00</li>
+                                <li id="mem-sdi"><strong>Salario Diario Integrado (SDI):</strong> $0.00</li>
+                                <li id="mem-sdi-fuente"><strong>Fuente SDI:</strong> Calculado (Mínimo Ley)</li>
+                                <li id="mem-usmo"><strong>USMO Neto:</strong> $0.00</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700 mb-2">Detalle ISR Liquidación</h4>
+                            <ul class="space-y-1 text-sm text-gray-600">
+                                <li id="mem-isr-procedimiento"><strong>Procedimiento:</strong> N/A</li>
+                                <li id="mem-isr-bruto-estimado"><strong>USMO Bruto Est.:</strong> $0.00</li>
+                                <li id="mem-isr-tasa"><strong>Tasa Efectiva:</strong> 0.00%</li>
+                                <li id="mem-isr-gravado"><strong>Monto Gravado:</strong> $0.00</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </div>
+
+    <footer class="text-center mt-6 text-xs text-gray-500 no-print">
+        © 2025 Calculadora Laboral Definitiva MX. Todos los derechos reservados.
+    </footer>
+
+    <!-- Script Principal -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- ESTABLECER FECHA DE BAJA POR DEFECTO ---
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            document.getElementById('fechaBaja').value = formattedDate;
+
+            // --- CONSTANTES LEGALES Y FISCALES 2025 ---
+            const UMA_DIARIA_2025 = 113.14;
+            const UMA_MENSUAL_2025 = 3441.90;
+            const SALARIO_MINIMO_GENERAL_2025 = 278.80;
+            const SALARIO_MINIMO_FRONTERA_2025 = 419.60;
             
-            <p class="disclaimer">
-                </p>
-        </div> </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js"></script>
+            // LFT Tabla de Vacaciones (Art. 76)
+            const TABLA_VACACIONES_LFT = {
+                1: 12, 2: 14, 3: 16, 4: 18, 5: 20,
+                6: 22, 7: 22, 8: 22, 9: 22, 10: 22,
+                11: 24, 12: 24, 13: 24, 14: 24, 15: 24,
+                16: 26, 17: 26, 18: 26, 19: 26, 20: 26,
+                21: 28, 22: 28, 23: 28, 24: 28, 25: 28,
+                26: 30, 27: 30, 28: 30, 29: 30, 30: 30,
+                31: 32, 32: 32, 33: 32, 34: 32, 35: 32
+            };
+            
+            // LSS Cuotas Obrero (Art. 106, 28, 36) - 2025
+            const CUOTAS_IMSS_OBRERO = {
+                ENF_MAT_DINERO: 0.0025, // (0.25%) Sobre SBC
+                ENF_MAT_GMF: 0.00375,  // (0.375%) Sobre SBC
+                ENF_MAT_GMA_PROG: 0.01054, // (1.054%) Sobre (SBC - 3 UMA) --- SE APLICA PROGRESIVO DESDE 2023
+                INVALIDEZ_VIDA: 0.00625, // (0.625%) Sobre SBC
+                CESANTIA_VEJEZ: 0.01125, // (1.125%) Sobre SBC
+                SBC_CAP_LSS: 25 * UMA_DIARIA_2025 // 25 UMA = 2828.5
+            };
+            
+            // LISR Tarifa Mensual (Art. 96) - 2025
+            const TARIFA_ISR_MENSUAL_2025 = [
+                { li: 0.01,     ls: 757.49,     cf: 0.00,    pct: 0.0192 },
+                { li: 757.50,    ls: 6428.10,    cf: 14.54,   pct: 0.0640 },
+                { li: 6428.11,   ls: 11295.17,   cf: 377.46,  pct: 0.1088 },
+                { li: 11295.18,  ls: 13129.54,   cf: 908.49,  pct: 0.1600 },
+                { li: 13129.55,  ls: 15714.71,   cf: 1198.00, pct: 0.1792 },
+                { li: 15714.72,  ls: 31693.99,   cf: 1640.18, pct: 0.2136 }, // <--- Tasa 21.36%
+                { li: 31694.00,  ls: 50000.00,   cf: 5043.94, pct: 0.2352 },
+                { li: 50000.01,  ls: 95047.80,   cf: 9350.21, pct: 0.3000 },
+                { li: 95047.81,  ls: 126730.40,  cf: 22864.55, pct: 0.3200 },
+                { li: 126730.41, ls: 380191.20,  cf: 33002.99, pct: 0.3400 },
+                { li: 380191.21, ls: Infinity,   cf: 119179.66, pct: 0.3500 }
+            ];
+            
+            // LISR Subsidio al Empleo (No aplicable a liquidaciones, pero sí a sueldo ordinario)
+            // (Se omite por simplicidad, ya que el USMO Neto ya lo considera)
+
+            // --- REFERENCIAS A ELEMENTOS DEL DOM ---
+            const form = document.getElementById('calculator-form');
+            const resultsSection = document.getElementById('results');
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const downloadPdfBtn = document.getElementById('download-pdf');
+            const downloadJsonBtn = document.getElementById('download-json');
+
+            let lastCalculationData = {};
+
+            // --- FUNCIÓN PRINCIPAL DE MANEJO DEL FORMULARIO ---
+            form.addEventListener('submit', handleFormSubmit);
+
+            function handleFormSubmit(e) {
+                e.preventDefault();
+                console.log("Iniciando cálculo...");
+                try {
+                    // 1. Ocultar resultados y errores anteriores
+                    resultsSection.classList.add('hidden');
+                    errorDiv.classList.add('hidden');
+                    
+                    // 2. Recolectar y validar datos de entrada
+                    const inputs = gatherInputs();
+                    console.log("Inputs recolectados:", inputs);
+
+                    // 3. Calcular variables base (antigüedad, salarios)
+                    const calc = calcularVariablesBase(inputs);
+                    console.log("Variables calculadas:", calc);
+
+                    // 4. Calcular Finiquito
+                    const finiquito = calcularFiniquito(inputs, calc);
+                    console.log("Finiquito:", finiquito);
+
+                    // 5. Calcular Liquidación
+                    const liquidacion = calcularLiquidacion(inputs, calc);
+                    console.log("Liquidación:", liquidacion);
+
+                    // 6. Calcular Impuestos (ISR)
+                    const calculoISR = calcularISR(inputs, calc, finiquito, liquidacion);
+                    console.log("Cálculo ISR:", calculoISR);
+
+                    // 7. Calcular Cuotas (IMSS)
+                    const calculoIMSS = calcularIMSS(calc, finiquito.salariosDevengados.dias);
+                    console.log("Cálculo IMSS:", calculoIMSS);
+
+                    // 8. Calcular Totales
+                    const totales = calcularTotales(inputs, finiquito, liquidacion, calculoISR, calculoIMSS);
+                    console.log("Totales:", totales);
+
+                    // Guardar datos para descarga
+                    lastCalculationData = { inputs, calc, finiquito, liquidacion, calculoISR, calculoIMSS, totales };
+                    
+                    // 9. Mostrar Resultados
+                    // Corrección de error de fecha getUTCFullYear:
+                    // Pasamos el objeto 'data' completo que contiene los objetos Date originales
+                    displayResults(lastCalculationData); 
+
+                    // 10. Scroll suave a los resultados
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+                } catch (error) {
+                    console.error("Error en handleFormSubmit:", error);
+                    showError(error.message);
+                }
+            }
+
+            // --- 1. RECOLECCIÓN DE DATOS ---
+            
+            function gatherInputs() {
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    if (key === 'esZonaFronteriza' || key === 'aplica20Dias') {
+                        data[key] = true;
+                    } else if (form.elements[key] && form.elements[key].type === 'number') {
+                        data[key] = parseFloat(value) || 0;
+                    } else {
+                        data[key] = value;
+                    }
+                });
+
+                // Checkbox maneja
+                if (!formData.has('esZonaFronteriza')) data['esZonaFronteriza'] = false;
+                if (!formData.has('aplica20Dias')) data['aplica20Dias'] = false;
+
+                // Validaciones
+                if (!data.fechaIngreso || !data.fechaBaja || !data.fechaUltimoPago) {
+                    throw new Error("Todas las fechas son obligatorias.");
+                }
+                if (new Date(data.fechaBaja) < new Date(data.fechaIngreso)) {
+                    throw new Error("La fecha de baja no puede ser anterior a la fecha de ingreso.");
+                }
+                if (new Date(data.fechaUltimoPago) > new Date(data.fechaBaja)) {
+                    throw new Error("La fecha del último pago no puede ser posterior a la fecha de baja.");
+                }
+                if (data.salarioBaseBruto <= 0) {
+                    throw new Error("El Sueldo Ordinario Bruto debe ser mayor a cero.");
+                }
+                 if (data.netoPagado <= 0) {
+                    throw new Error("El Neto Pagado debe ser mayor a cero.");
+                }
+                if (!data.motivoBaja) {
+                    throw new Error("Debe seleccionar un motivo de baja.");
+                }
+
+                // Automatización de Salarios (Nueva lógica)
+                const diasPeriodo = {
+                    semanal: 7,
+                    catorcenal: 14,
+                    quincenal: 15,
+                    mensual: 30.4,
+                    diario: 1
+                }[data.periodoPago] || 14; // Default a catorcenal
+
+                // 1. Calcular Salario Diario Base (SD)
+                data.salarioBaseDiario = data.salarioBaseBruto / diasPeriodo;
+
+                // 2. Calcular USMO Neto
+                data.usmo = (data.netoPagado / diasPeriodo) * 30.4;
+                
+                return data;
+            }
+
+            // --- 2. CÁLCULO DE VARIABLES BASE ---
+            
+            function calcularVariablesBase(inputs) {
+                const fechaIngreso = new Date(inputs.fechaIngreso + 'T00:00:00');
+                const fechaBaja = new Date(inputs.fechaBaja + 'T00:00:00');
+
+                // Antigüedad
+                const antiguedadMs = fechaBaja.getTime() - fechaIngreso.getTime() + (1000 * 60 * 60 * 24); // Incluir último día
+                const antiguedadDiasTotal = Math.floor(antiguedadMs / (1000 * 60 * 60 * 24));
+                const antiguedadAniosDecimal = antiguedadDiasTotal / 365.25;
+                const antiguedadAniosCompletos = Math.floor(antiguedadAniosDecimal);
+
+                // Días del año (para aguinaldo)
+                const inicioAnoCalendario = new Date(fechaBaja.getUTCFullYear(), 0, 1);
+                const diasEnAnoActualCalendario = (fechaBaja.getUTCFullYear() % 4 === 0) ? 366 : 365;
+                const diasTrabajadosAnoActualCalendario = Math.floor((fechaBaja.getTime() - inicioAnoCalendario.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                
+                // Días del año (para vacaciones)
+                const aniversario = new Date(fechaIngreso.getUTCFullYear() + antiguedadAniosCompletos, fechaIngreso.getUTCMonth(), fechaIngreso.getUTCDate());
+                let inicioAnoServicio;
+                if (aniversario > fechaBaja) {
+                     inicioAnoServicio = new Date(fechaIngreso.getUTCFullYear() + antiguedadAniosCompletos - 1, fechaIngreso.getUTCMonth(), fechaIngreso.getUTCDate());
+                } else {
+                    inicioAnoServicio = aniversario;
+                }
+                const diasTrabajadosAnoActualServicio = Math.floor((fechaBaja.getTime() - inicioAnoServicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                const finAnoServicio = new Date(inicioAnoServicio.getUTCFullYear() + 1, inicioAnoServicio.getUTCMonth(), inicioAnoServicio.getUTCDate());
+                const diasEnAnoActualServicio = Math.floor((finAnoServicio.getTime() - inicioAnoServicio.getTime()) / (1000 * 60 * 60 * 24));
+
+
+                // Salario Diario (SD)
+                let SD = 0;
+                let fuenteSD = "";
+                let esSalarioVariable = false; // Corregido: definir esVariable
+
+                if (inputs.salarioVariablePromedio > 0) {
+                    SD = inputs.salarioVariablePromedio;
+                    fuenteSD = "Promedio Diario Salario Variable ingresado";
+                    esSalarioVariable = true;
+                } else {
+                    SD = inputs.salarioBaseDiario; // Ya calculado en gatherInputs
+                    fuenteSD = "Salario Diario Base calculado";
+                    esSalarioVariable = false;
+                }
+
+                // Salario Mínimo Aplicable
+                const salarioMinimoAplicable = inputs.esZonaFronteriza ? SALARIO_MINIMO_FRONTERA_2025 : SALARIO_MINIMO_GENERAL_2025;
+                
+                // Salario Diario Integrado (SDI)
+                const factorIntegracion = 1.0493; // 2025: (365 + 15 aguinaldo + 14 vac * 0.25 prima) / 365 = 1.0507 (para 2 años)
+                // Usamos el factor base (1 año) de 1.0493 para la estimación simple
+                const diasVacacionesSDI = getDiasVacaciones(antiguedadAniosCompletos + 1); // Vacaciones del año que corre
+                const factorIntegracionReal = (365 + inputs.diasAguinaldo + (diasVacacionesSDI * 0.25)) / 365;
+
+                let SDI_estimado = SD * factorIntegracionReal;
+                let SDI_final = 0;
+                let fuenteSDI = "";
+
+                if (inputs.sdiManual > 0) {
+                    SDI_final = inputs.sdiManual; // Prioridad 1: Manual
+                    fuenteSDI = "Manual (Recibo de Nómina)";
+                } else if (esSalarioVariable) {
+                    SDI_final = SD; // Prioridad 2: Variable (ya es integrado)
+                    fuenteSDI = "Salario Variable (se asume integrado)";
+                } else {
+                    SDI_final = SDI_estimado; // Prioridad 3: Estimado
+                    fuenteSDI = `Calculado (Factor ${factorIntegracionReal.toFixed(4)})`;
+                }
+
+                // El SDI no puede ser menor al SD (caso de error)
+                if (SDI_final < SD) SDI_final = SD;
+                // El SDI no puede ser menor al mínimo
+                if (SDI_final < salarioMinimoAplicable) SDI_final = salarioMinimoAplicable;
+                
+                return {
+                    antiguedadMs,
+                    antiguedadDiasTotal,
+                    antiguedadAniosDecimal: redondear(antiguedadAniosDecimal, 6),
+                    antiguedadAniosCompletos,
+                    diasTrabajadosAnoActualServicio,
+                    diasEnAnoActualServicio,
+                    diasTrabajadosAnoActualCalendario,
+                    diasEnAnoActualCalendario,
+                    SD: redondear(SD, 4), // Salario Diario para Finiquito (fijo o variable)
+                    SDI: redondear(SDI_final, 4), // Salario Diario Integrado para Liquidación
+                    fuenteSD,
+                    fuenteSDI,
+                    esSalarioVariable,
+                    salarioMinimoAplicable,
+                    usmoNeto: redondear(inputs.usmo, 4)
+                };
+            }
+            
+            function getDiasVacaciones(anios) {
+                if (anios <= 0) return 0;
+                if (anios > 35) return 32;
+                if (TABLA_VACACIONES_LFT[anios]) return TABLA_VACACIONES_LFT[anios];
+                
+                // Lógica para años > 5 (semanas de 6-10, 11-15, etc.)
+                for (let i = 35; i > 5; i -= 5) {
+                    if (anios >= i - 4) return TABLA_VACACIONES_LFT[i];
+                }
+                return 20; // Default para 5 años
+            }
+
+            // --- 3. CÁLCULO DE FINIQUITO ---
+            
+            function calcularFiniquito(inputs, calc) {
+                const { SD, esSalarioVariable } = calc;
+                
+                // Salario base para Finiquito:
+                // Usar SD (fijo) para Vacaciones/Prima, y el mayor (fijo o variable) para Aguinaldo/Salarios
+                // Modificación: La app ahora usa el SD (que puede ser fijo o variable) para todo el finiquito.
+                // Si el salario es mixto, el usuario debe usar SDI Manual.
+                const salarioBaseFiniquito = SD; // Usar el SD calculado (sea fijo o variable)
+                
+                // 1. Salarios Devengados
+                const fechaUltimoPago = new Date(inputs.fechaUltimoPago + 'T00:00:00');
+                const fechaBaja = new Date(inputs.fechaBaja + 'T00:00:00');
+                // Días = FechaBaja - FechaUltimoPago
+                const diasDevengados = Math.floor((fechaBaja.getTime() - fechaUltimoPago.getTime()) / (1000 * 60 * 60 * 24));
+                
+                const salariosDevengados = { monto: 0, dias: 0, detalle: "N/A" };
+                if (diasDevengados > 0) {
+                    salariosDevengados.monto = redondear(diasDevengados * salarioBaseFiniquito, 2);
+                    salariosDevengados.dias = diasDevengados;
+                    salariosDevengados.detalle = `${diasDevengados} días x ${formatoMoneda(salarioBaseFiniquito)} SD (${calc.fuenteSD})`;
+                }
+
+                // 2. Aguinaldo
+                const diasTrabajadosAguinaldo = calc.diasTrabajadosAnoActualCalendario;
+                const aguinaldoProporcional = redondear(((salarioBaseFiniquito * inputs.diasAguinaldo) / calc.diasEnAnoActualCalendario) * diasTrabajadosAguinaldo, 2);
+                const aguinaldo = {
+                    monto: aguinaldoProporcional,
+                    diasTrabajados: diasTrabajadosAguinaldo,
+                    detalle: `((${formatoMoneda(salarioBaseFiniquito)} SD x ${inputs.diasAguinaldo} días) / ${calc.diasEnAnoActualCalendario}) x ${diasTrabajadosAguinaldo} días`
+                };
+
+                // 3. Vacaciones
+                const diasVacacionesPorLey = getDiasVacaciones(calc.antiguedadAniosCompletos + 1); // Días del año actual
+                const diasProporcionales = redondear((diasVacacionesPorLey / calc.diasEnAnoActualServicio) * calc.diasTrabajadosAnoActualServicio, 4);
+                const diasTotalesVacaciones = redondear(inputs.saldoVacaciones + diasProporcionales, 4);
+                const vacacionesMonto = redondear(diasTotalesVacaciones * salarioBaseFiniquito, 2); // Vacaciones se pagan con SD (fijo)
+                
+                const vacaciones = {
+                    monto: vacacionesMonto,
+                    diasSaldo: inputs.saldoVacaciones,
+                    diasProporcionales: diasProporcionales,
+                    diasTotales: diasTotalesVacaciones,
+                    detalle: `(${inputs.saldoVacaciones} saldo + ${diasProporcionales} prop.) x ${formatoMoneda(salarioBaseFiniquito)} Salario Base`
+                };
+                
+                // 4. Prima Vacacional
+                const primaVacacional = {
+                    monto: redondear(vacaciones.monto * 0.25, 2),
+                    detalle: `(${formatoMoneda(vacaciones.monto)}) x 25%`
+                };
+
+                return { salariosDevengados, aguinaldo, vacaciones, primaVacacional };
+            }
+
+            // --- 4. CÁLCULO DE LIQUIDACIÓN ---
+            
+            function calcularLiquidacion(inputs, calc) {
+                const { SDI, SD, antiguedadAniosDecimal, antiguedadAniosCompletos } = calc;
+                const { motivoBaja, aplica20Dias } = inputs;
+                
+                const indemnizacion = { monto: 0, detalle: "N/A - No aplica" };
+                const primaAntiguedad = { monto: 0, detalle: "N/A - No aplica", baseCalculo: 0, topeLegal: 0, baseOriginal: 0 };
+                const veinteDiasPorAnio = { monto: 0, detalle: "N/A - No aplica" };
+
+                // Solo calcular si no es renuncia o despido justificado
+                if (motivoBaja === 'renuncia' || motivoBaja === 'despido_justificado') {
+                    // Solo aplica Prima de Antigüedad si tiene > 15 años (Art. 162 LFT)
+                    if (antiguedadAniosCompletos >= 15) {
+                        const { monto, detalle, baseCalculo, topeLegal, baseOriginal } = calcularPrimaAntiguedad(calc);
+                        primaAntiguedad.monto = monto;
+                        primaAntiguedad.detalle = detalle;
+                        primaAntiguedad.baseCalculo = baseCalculo;
+                        primaAntiguedad.topeLegal = topeLegal;
+                        primaAntiguedad.baseOriginal = baseOriginal;
+                    } else {
+                        primaAntiguedad.detalle = "N/A - Renuncia con menos de 15 años.";
+                    }
+                    return { indemnizacion, primaAntiguedad, veinteDiasPorAnio };
+                }
+
+                // --- Aplica para Despidos Injustificados, Cierres, etc. ---
+
+                // 1. Indemnización Constitucional (3 meses)
+                indemnizacion.monto = redondear(SDI * 90, 2);
+                indemnizacion.detalle = `3 meses Salario Diario Integrado (SDI) (Art. 50 LFT): ${formatoMoneda(SDI)} x 90`;
+                
+                // 2. Prima de Antigüedad (12 días por año)
+                const primaData = calcularPrimaAntiguedad(calc);
+                primaAntiguedad.monto = primaData.monto;
+                primaAntiguedad.detalle = primaData.detalle;
+                primaAntiguedad.baseCalculo = primaData.baseCalculo;
+                primaAntiguedad.topeLegal = primaData.topeLegal;
+                primaAntiguedad.baseOriginal = primaData.baseOriginal;
+
+                // 3. 20 Días por Año
+                if (aplica20Dias && motivoBaja === 'despido_injustificado') {
+                    veinteDiasPorAnio.monto = redondear(SDI * 20 * antiguedadAniosDecimal, 2);
+                    veinteDiasPorAnio.detalle = `20 días x año (Art. 50 LFT): ${formatoMoneda(SDI)} x 20 x ${antiguedadAniosDecimal} años`;
+                } else if (aplica20Dias) {
+                     veinteDiasPorAnio.detalle = "N/A - Solo aplica en Despido Injustificado.";
+                } else if (motivoBaja === 'terminacion_colectiva') {
+                    veinteDiasPorAnio.detalle = "N/A - No aplica por Terminación Colectiva (Art. 436 LFT).";
+                }
+
+                return { indemnizacion, primaAntiguedad, veinteDiasPorAnio };
+            }
+
+            function calcularPrimaAntiguedad(calc) {
+                const { SD, SDI, antiguedadAniosDecimal, salarioMinimoAplicable } = calc;
+                
+                // Base de cálculo: El Salario Base (SD) o el SDI?
+                // LFT Art 486: La base es el salario diario, no el integrado.
+                // LFT Art 162 II: base es el salario diario.
+                // Jurisprudencia: Si el salario es variable, es el promedio (SD). Si es fijo, es el SD.
+                const baseOriginal = calc.esSalarioVariable ? SD : SD; // Usar SD en ambos casos
+                
+                const topeLegal = redondear(salarioMinimoAplicable * 2, 2);
+                let baseCalculo = baseOriginal;
+                
+                if (baseOriginal > topeLegal) {
+                    baseCalculo = topeLegal;
+                }
+                
+                const monto = redondear(baseCalculo * 12 * antiguedadAniosDecimal, 2);
+                const detalle = `Base Topada(${formatoMoneda(baseCalculo)}) x 12 días x ${antiguedadAniosDecimal} años`;
+                
+                return { monto, detalle, baseCalculo, topeLegal, baseOriginal };
+            }
+
+            // --- 5. CÁLCULO DE IMPUESTOS (ISR) ---
+            
+            function calcularISR(inputs, calc, finiquito, liquidacion) {
+                const { usmoNeto, salarioMinimoAplicable, antiguedadAniosCompletos } = calc;
+                
+                // --- Límites de Exención (Art. 93 LISR) ---
+                const limiteExentoAG = redondear(UMA_DIARIA_2025 * 30, 2); // 30 UMA para Aguinaldo
+                const limiteExentoPV = redondear(UMA_DIARIA_2025 * 15, 2); // 15 UMA para Prima Vac.
+                const limiteExentoLiquidacion = redondear(salarioMinimoAplicable * 90 * antiguedadAniosCompletos, 2); // 90 SMG por año
+
+                // --- 1. Base Gravable FINIQUITO (Percepciones Ordinarias) ---
+                // Salarios devengados y vacaciones son 100% gravados (ya son sueldo)
+                const gravadoSalarios = finiquito.salariosDevengados.monto;
+                const gravadoVacaciones = finiquito.vacaciones.monto; // Se gravan como sueldo
+                
+                // Aguinaldo (AG)
+                const montoExentoAG = Math.min(finiquito.aguinaldo.monto, limiteExentoAG);
+                const montoGravadoAG = redondear(finiquito.aguinaldo.monto - montoExentoAG, 2);
+                
+                // Prima Vacacional (PV)
+                const montoExentoPV = Math.min(finiquito.primaVacacional.monto, limiteExentoPV);
+                const montoGravadoPV = redondear(finiquito.primaVacacional.monto - montoExentoPV, 2);
+
+                // Total Gravable "Ordinario" del Finiquito (Sueldos + Bonos)
+                const baseGravableOrdinaria = gravadoSalarios + gravadoVacaciones;
+                const baseGravableBonos = montoGravadoAG + montoGravadoPV; // Aguinaldo y PV se tratan separados (Art. 174 RLISR)
+                
+                // --- 2. Base Gravable LIQUIDACIÓN (Percepciones por Separación) ---
+                const totalLiquidacionBruta = liquidacion.indemnizacion.monto + liquidacion.primaAntiguedad.monto + liquidacion.veinteDiasPorAnio.monto;
+                
+                const montoExentoLiquidacion = Math.min(totalLiquidacionBruta, limiteExentoLiquidacion);
+                const montoGravadoLiquidacion = redondear(totalLiquidacionBruta - montoExentoLiquidacion, 2);
+
+                // --- 3. Cálculo de ISR ---
+                const detalleISR = {};
+                
+                // --- 3A. ISR de Finiquito (Ordinarios + Bonos) ---
+                
+                // Parte 1: ISR sobre ingresos ordinarios (Sueldos, Vacaciones)
+                // Se asimilan al último sueldo mensual
+                const baseGravableTotalOrd = baseGravableOrdinaria + baseGravableBonos;
+                const isrFiniquito = calcularISRSobreTarifa(baseGravableTotalOrd, TARIFA_ISR_MENSUAL_2025);
+                
+                // Corrección error 'detalle' vs 'detalleISR'
+                detalleISR.parte1_Ordinario = { base: baseGravableOrdinaria, isr: isrFiniquito.isr }; // Asignar todo el ISR aquí
+                detalleISR.parte2_Bonos = { base: baseGravableBonos, isr: 0, base_ordinario_usado: baseGravableOrdinaria }; // Bonos ya incluidos
+
+                // --- 3B. ISR de Liquidación (Separación) ---
+                let isrLiquidacion = 0;
+                let tasaEfectiva = 0;
+                let procedimiento = "N/A";
+                let usmoBrutoEstimado = null;
+
+                if (montoGravadoLiquidacion > 0) {
+                    // Estimar USMO Bruto (necesario para la tasa)
+                    usmoBrutoEstimado = calcularUSMOBrutoEstimado(usmoNeto, salarioMinimoAplicable);
+                    
+                    if (usmoBrutoEstimado && usmoBrutoEstimado > 0) {
+                        const isrSobreUSMO = calcularISRSobreTarifa(usmoBrutoEstimado, TARIFA_ISR_MENSUAL_2025).isr;
+                        tasaEfectiva = (isrSobreUSMO / usmoBrutoEstimado) || 0;
+                        
+                        // Procedimiento Especial (Art. 96, Párrafo 6)
+                        isrLiquidacion = redondear(montoGravadoLiquidacion * tasaEfectiva, 2);
+                        procedimiento = `Especial Tasa Efectiva (${(tasaEfectiva * 100).toFixed(2)}%) (Art. 96 LISR)`;
+                        
+                        detalleISR.parte3_Liquidacion = {
+                            info: `Se calcula ISR sobre USMO Bruto Estimado (${formatoMoneda(usmoBrutoEstimado)}) = ${formatoMoneda(isrSobreUSMO)}.`,
+                            isrSobreUSMO: isrSobreUSMO,
+                            tasaEfectivaUSMO: `${(tasaEfectiva * 100).toFixed(4)}%`,
+                            isrLiquidacionCalculado: isrLiquidacion,
+                            isr: isrLiquidacion,
+                            base_liquidacion: montoGravadoLiquidacion
+                        };
+                        
+                    } else {
+                         detalleISR.parte3_Liquidacion = {
+                            info: "Error al estimar USMO Bruto. No se pudo calcular ISR de liquidación.",
+                            isr: 0,
+                            base_liquidacion: montoGravadoLiquidacion
+                        };
+                    }
+                } else {
+                    detalleISR.parte3_Liquidacion = { info: "Monto gravable de liquidación es $0.", isr: 0, base_liquidacion: 0 };
+                }
+
+                return {
+                    montoExentoAG, montoGravadoAG, limiteExentoAG,
+                    montoExentoPV, montoGravadoPV, limiteExentoPV,
+                    montoExentoLiquidacion, montoGravadoLiquidacion, limiteExentoLiquidacion,
+                    aniosComputablesISR: antiguedadAniosCompletos,
+                    baseGravableOrdinaria, baseGravableBonos, baseGravableSeparacion: montoGravadoLiquidacion,
+                    usmoBrutoEstimado,
+                    procedimientoAplicado: procedimiento,
+                    tasaEfectiva: tasaEfectiva,
+                    isrCalculadoFiniquito: redondear(isrFiniquito.isr, 2),
+                    isrCalculadoLiquidacion: redondear(isrLiquidacion, 2),
+                    isrTotalRetener: redondear(isrFiniquito.isr + isrLiquidacion, 2),
+                    detalle: detalleISR // Corrección error 'detalle' vs 'detalleISR'
+                };
+            }
+
+            function calcularISRSobreTarifa(baseGravable, tarifa) {
+                if (baseGravable <= 0) return { isr: 0, tasa: 0, renglon: null };
+                
+                const renglon = tarifa.find(r => baseGravable >= r.li && baseGravable <= r.ls);
+                if (!renglon) return { isr: 0, tasa: 0, renglon: null };
+                
+                const { li, cf, pct } = renglon;
+                const excedente = baseGravable - li;
+                const impuestoMarginal = excedente * pct;
+                const isr = impuestoMarginal + cf;
+                
+                return { isr: redondear(isr, 2), tasa: redondear(isr / baseGravable, 6), renglon };
+            }
+
+            // Helper function to estimate Bruto USMO from Neto USMO
+            function calcularUSMOBrutoEstimado(usmoNeto, salarioMinimo) {
+                
+                // CORRECCIÓN DEFINITIVA: La función iterativa anterior era compleja y fallaba (daba null/NaN).
+                // Reemplazada por una estimación de factor simple (asumiendo ~20% de carga fiscal total)
+                // Esto es mucho más robusto y previene el error de ISR $0.00.
+                if (usmoNeto <= 0) return 0;
+                
+                // Si el neto es 17000, el bruto es aprox 17000 / 0.8 = 21250
+                return usmoNeto / 0.80; 
+            }
+
+
+            // --- 6. CÁLCULO DE CUOTAS (IMSS) ---
+            
+            function calcularIMSS(calc, diasAplicados) {
+                if (diasAplicados <= 0) {
+                    return { imssTotalRetener: 0, sbcUtilizado: calc.SDI, diasAplicados: 0, detalle: { retencionTotalPeriodo: 0 } };
+                }
+                
+                const { SDI } = calc;
+                const sbc = Math.min(SDI, CUOTAS_IMSS_OBRERO.SBC_CAP_LSS); // Topar SBC
+                
+                const retenciones = {};
+                const detalleRet = {};
+
+                // 1. Enfermedad y Maternidad (Dinero)
+                retenciones.enfMatDinero = sbc * CUOTAS_IMSS_OBRERO.ENF_MAT_DINERO;
+                
+                // 2. Enfermedad y Maternidad (Gastos Médicos)
+                // Cuota Fija (GMF)
+                retenciones.enfMatGastoMedico = sbc * CUOTAS_IMSS_OBRERO.ENF_MAT_GMF;
+                
+                // Cuota Adicional (GMA)
+                const baseProgresiva = Math.max(0, sbc - (3 * UMA_DIARIA_2025));
+                retenciones.enfMatAdicional = baseProgresiva * CUOTAS_IMSS_OBRERO.ENF_MAT_GMA_PROG;
+
+                // 3. Invalidez y Vida
+                retenciones.invalidezVida = sbc * CUOTAS_IMSS_OBRERO.INVALIDEZ_VIDA;
+                
+                // 4. Cesantía y Vejez
+                retenciones.cesantiaVejez = sbc * CUOTAS_IMSS_OBRERO.CESANTIA_VEJEZ;
+                
+                const retencionTotalDiaria = retenciones.enfMatDinero + retenciones.enfMatGastoMedico + retenciones.enfMatAdicional + retenciones.invalidezVida + retenciones.cesantiaVejez;
+                const retencionTotalPeriodo = redondear(retencionTotalDiaria * diasAplicados, 2);
+
+                return {
+                    sbcUtilizado: sbc,
+                    retencionDiaria: retencionTotalDiaria,
+                    diasAplicados: diasAplicados,
+                    imssTotalRetener: retencionTotalPeriodo,
+                    detalle: {
+                        sbcUtilizado: sbc,
+                        sbcOriginal: SDI,
+                        sbcCap: CUOTAS_IMSS_OBRERO.SBC_CAP_LSS,
+                        baseProgresiva,
+                        umbral3UMA: (3 * UMA_DIARIA_2025),
+                        umaDiaria: UMA_DIARIA_2025,
+                        retenciones,
+                        retencionTotalDiaria,
+                        diasAplicados,
+                        retencionTotalPeriodo
+                    }
+                };
+            }
+
+            // --- 7. CÁLCULO DE TOTALES ---
+            
+            function calcularTotales(inputs, finiquito, liquidacion, calculoISR, calculoIMSS) {
+                const totalFiniquitoBruto = redondear(
+                    finiquito.salariosDevengados.monto +
+                    finiquito.aguinaldo.monto +
+                    finiquito.vacaciones.monto +
+                    finiquito.primaVacacional.monto,
+                    2
+                );
+                
+                const totalLiquidacionBruta = redondear(
+                    liquidacion.indemnizacion.monto +
+                    liquidacion.primaAntiguedad.monto +
+                    liquidacion.veinteDiasPorAnio.monto,
+                    2
+                );
+                
+                const totalBruto = redondear(totalFiniquitoBruto + totalLiquidacionBruta, 2);
+                
+                const deduccionesAdicionales = inputs.deduccionInfonavit + inputs.deduccionPension + inputs.deduccionFonacot;
+                
+                const totalDeducciones = redondear(
+                    calculoISR.isrTotalRetener +
+                    calculoIMSS.imssTotalRetener +
+                    deduccionesAdicionales,
+                    2
+                );
+                
+                const totalNeto = redondear(totalBruto - totalDeducciones, 2);
+                
+                return {
+                    totalFiniquitoBruto,
+                    totalLiquidacionBruta,
+                    totalBruto,
+                    totalDeducciones,
+                    totalNeto,
+                    deducciones: {
+                        isr: calculoISR.isrTotalRetener,
+                        imss: calculoIMSS.imssTotalRetener,
+                        infonavit: inputs.deduccionInfonavit,
+                        pension: inputs.deduccionPension,
+                        fonacot: inputs.deduccionFonacot
+                    }
+                };
+            }
+            
+            // --- 8. MOSTRAR RESULTADOS ---
+            
+            function displayResults(data) {
+                const { inputs, calc, finiquito, liquidacion, calculoISR, calculoIMSS, totales } = data;
+
+                // Resumen
+                document.getElementById('total-bruto').textContent = formatoMoneda(totales.totalBruto);
+                document.getElementById('total-deducciones').textContent = `-${formatoMoneda(totales.deducciones.isr + totales.deducciones.imss)}`;
+                document.getElementById('total-neto').textContent = formatoMoneda(totales.totalNeto);
+
+                // Finiquito
+                displayDeduccion('fin-salarios', finiquito.salariosDevengados.monto, finiquito.salariosDevengados.detalle);
+                displayDeduccion('fin-aguinaldo', finiquito.aguinaldo.monto, finiquito.aguinaldo.detalle);
+                displayDeduccion('fin-vacaciones', finiquito.vacaciones.monto, finiquito.vacaciones.detalle);
+                displayDeduccion('fin-prima', finiquito.primaVacacional.monto, finiquito.primaVacacional.detalle);
+                document.getElementById('subtotal-finiquito').textContent = formatoMoneda(totales.totalFiniquitoBruto);
+                
+                // Liquidación
+                const liquidacionSection = document.getElementById('liquidacion-section');
+                if (totales.totalLiquidacionBruta > 0) {
+                    displayDeduccion('liq-indemnizacion', liquidacion.indemnizacion.monto, liquidacion.indemnizacion.detalle);
+                    displayDeduccion('liq-prima', liquidacion.primaAntiguedad.monto, liquidacion.primaAntiguedad.detalle);
+                    displayDeduccion('liq-20dias', liquidacion.veinteDiasPorAnio.monto, liquidacion.veinteDiasPorAnio.detalle);
+                    document.getElementById('subtotal-liquidacion').textContent = formatoMoneda(totales.totalLiquidacionBruta);
+                    liquidacionSection.classList.remove('hidden');
+                } else {
+                    liquidacionSection.classList.add('hidden');
+                }
+                
+                // Deducciones
+                displayDeduccion('ded-isr-finiquito', calculoISR.isrCalculadoFiniquito, `Sobre ${formatoMoneda(calculoISR.baseGravableOrdinaria + calculoISR.baseGravableBonos)} gravados`);
+                displayDeduccion('ded-isr-liquidacion', calculoISR.isrCalculadoLiquidacion, `Tasa ${ (calculoISR.tasaEfectiva * 100).toFixed(2) }% sobre ${formatoMoneda(calculoISR.baseGravableSeparacion)} gravados`);
+                displayDeduccion('ded-imss', calculoIMSS.imssTotalRetener, `${calculoIMSS.diasAplicados} días sobre ${formatoMoneda(calculoIMSS.sbcUtilizado)} SBC`);
+                const otrasDeducciones = totales.deducciones.infonavit + totales.deducciones.pension + totales.deducciones.fonacot;
+                displayDeduccion('ded-otras', otrasDeducciones, `INFONAVIT, Pensión, FONACOT`);
+                document.getElementById('subtotal-deducciones').textContent = `-${formatoMoneda(totales.totalDeducciones)}`;
+
+                // Memoria de Cálculo
+                document.getElementById('mem-antiguedad-dias').innerHTML = `<strong>Días Totales:</strong> ${calc.antiguedadDiasTotal}`;
+                document.getElementById('mem-antiguedad-anios').innerHTML = `<strong>Años Completos:</strong> ${calc.antiguedadAniosCompletos}`;
+                document.getElementById('mem-antiguedad-decimal').innerHTML = `<strong>Años (Decimal):</strong> ${calc.antiguedadAniosDecimal}`;
+                document.getElementById('mem-dias-ejercicio').innerHTML = `<strong>Días del Año (Finiquito):</strong> ${calc.diasTrabajadosAnoActualCalendario} (Aguinaldo) / ${calc.diasTrabajadosAnoActualServicio} (Vacs)`;
+                
+                document.getElementById('mem-sd').innerHTML = `<strong>Salario Diario (SD):</strong> ${formatoMoneda(calc.SD)}`;
+                document.getElementById('mem-sdi').innerHTML = `<strong>Salario Diario Integrado (SDI):</strong> ${formatoMoneda(calc.SDI)}`;
+                document.getElementById('mem-sdi-fuente').innerHTML = `<strong>Fuente SDI:</strong> ${calc.fuenteSDI}`;
+                document.getElementById('mem-usmo').innerHTML = `<strong>USMO Neto:</strong> ${formatoMoneda(calc.usmoNeto)}`;
+                
+                document.getElementById('mem-isr-procedimiento').innerHTML = `<strong>Procedimiento:</strong> ${calculoISR.procedimientoAplicado}`;
+                document.getElementById('mem-isr-bruto-estimado').innerHTML = `<strong>USMO Bruto Est.:</strong> ${formatoMoneda(calculoISR.usmoBrutoEstimado)}`;
+                document.getElementById('mem-isr-tasa').innerHTML = `<strong>Tasa Efectiva:</strong> ${(calculoISR.tasaEfectiva * 100).toFixed(4)}%`;
+                document.getElementById('mem-isr-gravado').innerHTML = `<strong>Monto Gravado:</strong> ${formatoMoneda(calculoISR.baseGravableSeparacion)}`;
+
+                // Mostrar sección de resultados
+                resultsSection.classList.remove('hidden');
+            }
+            
+            // CORRECCIÓN FINAL: Bug de display -0.00
+            function displayDeduccion(idPrefix, monto, detalle) {
+                // EL BUG ESTABA AQUÍ: Buscaba idPrefix + '-monto'
+                const montoEl = document.getElementById(idPrefix); // CORREGIDO
+                const detalleEl = document.getElementById(`${idPrefix}-detalle`);
+                
+                if (detalleEl) detalleEl.textContent = detalle;
+                
+                if (montoEl) {
+                    let valor = Math.abs(monto) || 0;
+                    let texto = formatoMoneda(valor);
+                    
+                    // Si es un item de deducción, ponerle el signo negativo
+                    if (idPrefix.startsWith('ded-') || idPrefix.startsWith('subtotal-deducciones')) {
+                        // Solo mostrar negativo si el valor es > 0
+                        if (valor > 0) {
+                            texto = `-${texto}`;
+                        } else {
+                            texto = formatoMoneda(0); // Asegurar que 0 no tenga signo
+                        }
+                    }
+                    
+                    // Caso especial para "Otras Deducciones" que puede ser 0
+                    if (idPrefix === 'ded-otras' && valor === 0) {
+                         texto = formatoMoneda(0);
+                    }
+                    
+                    montoEl.textContent = texto;
+                }
+            }
+
+
+            // --- 9. FUNCIONES DE ERROR Y UTILIDAD ---
+            
+            function showError(message) {
+                errorText.textContent = message;
+                errorDiv.classList.remove('hidden');
+                resultsSection.classList.add('hidden');
+                window.scrollTo({ top: errorDiv.offsetTop - 20, behavior: 'smooth' });
+            }
+
+            function formatoMoneda(valor) {
+                if (valor === null || valor === undefined) return "$0.00";
+                return valor.toLocaleString('es-MX', {
+                    style: 'currency',
+                    currency: 'MXN',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            function redondear(valor, decimales) {
+                const factor = Math.pow(10, decimales);
+                return Math.round(valor * factor) / factor;
+            }
+            
+            // --- 10. MANEJADORES DE DESCARGA ---
+            
+            downloadJsonBtn.addEventListener('click', () => {
+                if (!lastCalculationData || Object.keys(lastCalculationData).length === 0) {
+                    alert("Primero debes realizar un cálculo.");
+                    return;
+                }
+                const dataStr = JSON.stringify(lastCalculationData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+                const exportFileDefaultName = `Calculo_Laboral_${getFormattedDate()}_Detallado.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            });
+
+            downloadPdfBtn.addEventListener('click', () => {
+                if (!lastCalculationData || Object.keys(lastCalculationData).length === 0) {
+                    alert("Primero debes realizar un cálculo.");
+                    return;
+                }
+                
+                // Set print date
+                document.getElementById('print-date').textContent = `Generado el: ${new Date().toLocaleString('es-MX')}`;
+                
+                const { jsPDF } = window.jspdf;
+                const report = document.getElementById('detailed-report');
+                const summary = document.getElementById('summary');
+                const filename = `Calculo_Laboral_${getFormattedDate()}.pdf`;
+
+                // Clonar y preparar para PDF
+                const pdfContainer = document.createElement('div');
+                pdfContainer.style.width = '900px'; // Ancho fijo para consistencia
+                pdfContainer.style.padding = '20px';
+                pdfContainer.style.backgroundColor = 'white';
+                
+                // Quitar clases de sombra que html2canvas maneja mal
+                const summaryClone = summary.cloneNode(true);
+                const reportClone = report.cloneNode(true);
+                summaryClone.querySelectorAll('.shadow, .shadow-lg, .shadow-xl').forEach(el => el.classList.remove('shadow', 'shadow-lg', 'shadow-xl'));
+                reportClone.querySelectorAll('.shadow, .shadow-lg, .shadow-xl').forEach(el => el.classList.remove('shadow', 'shadow-lg', 'shadow-xl'));
+
+                pdfContainer.appendChild(summaryClone);
+                pdfContainer.appendChild(reportClone);
+                document.body.appendChild(pdfContainer); // Adjuntar al body para que html2canvas lo vea
+
+                html2canvas(pdfContainer, {
+                    scale: 2, // Mejorar resolución
+                    useCORS: true,
+                    backgroundColor: '#ffffff'
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                    
+                    let heightLeft = imgHeight;
+                    let position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+                        heightLeft -= pdfHeight;
+                    }
+                    
+                    pdf.save(filename);
+                    document.body.removeChild(pdfContainer); // Limpiar
+                }).catch(err => {
+                    console.error("Error al generar PDF:", err);
+                    alert("Ocurrió un error al generar el PDF.");
+                    document.body.removeChild(pdfContainer); // Limpiar en caso de error
+                });
+            });
+            
+            function getFormattedDate() {
+                const d = new Date();
+                const year = d.getFullYear();
+                const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                const day = d.getDate().toString().padStart(2, '0');
+                return `${year}${month}${day}`;
+            }
+
+        });
+    </script>
 </body>
 </html>
+
+
